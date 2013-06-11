@@ -136,70 +136,15 @@ module Middleman
     # @param paths Some paths string or Pathname
     # @return [Array] An array of filenames
     def self.all_files_under(*paths)
-      paths.flatten!
-      paths.map! { |p| Pathname(p) }
-      files = paths.select { |p| p.file? }
-      paths.select {|p| p.directory? }.each do |dir|
-        files << all_files_under(dir.children)
-      end
-      files.flatten
-    end
-
-    # Simple shared cache implementation
-    class Cache
-      # Initialize
-      def initialize
-        self.clear
-      end
-
-      # Either get the cached key or save the contents of the block
-      #
-      # @param key Anything Hash can use as a key
-      def fetch(*key)
-        @cache[key] ||= yield
-      end
-
-      # Whether the key is in the cache
-      #
-      # @param key Anything Hash can use as a key
-      # @return [Boolean]
-      def has_key?(key)
-        @cache.has_key?(key)
-      end
-
-      # Get a specific key
-      #
-      # @param key Anything Hash can use as a key
-      def get(key)
-        @cache[key]
-      end
-
-      # Array of keys
-      # @return [Array]
-      def keys
-        @cache.keys
-      end
-
-      # Clear the entire cache
-      # @return [void]
-      def clear
-        @cache = {}
-      end
-
-      # Set a specific key
-      #
-      # @param key Anything Hash can use as a key
-      # @param value Cached value
-      # @return [void]
-      def set(key, value)
-        @cache[key] = value
-      end
-
-      # Remove a specific key
-      # @param key Anything Hash can use as a key
-      def remove(*key)
-        @cache.delete(key)
-      end
+      # when we drop 1.8, replace this with flat_map
+      paths.map do |p|
+        path = Pathname(p)
+        if path.directory?
+          all_files_under(*path.children)
+        elsif path.file?
+          path
+        end
+      end.flatten.compact
     end
   end
 end

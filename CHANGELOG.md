@@ -1,4 +1,54 @@
-master
+3.1.0 Highlights
+===
+
+* Autoload support (moving away from middleman-more)
+* New Configuration System
+* New v4 Extension API
+* `/__middleman' inspector
+* Added Ruby 2.0, dropped Ruby 1.9.2
+* Fully tested on JRuby
+* Build defaults to --clean
+
+3.1.0.rc.2
+===
+
+* `layouts_dir` is now configurable
+* Custom template classes can now override the file used for creating the project Gemfile.
+* Add an "empty" template that produces the minimum necessary structure for a Middleman project.
+* Fix ignoring layouts from the sitemap when the source directory has been set to something other than 'source'. #896
+* Track test coverage with simplecov
+* i18n only autodetects languages in the `locales` root
+* Frontmatter cache fixes solve performance regressions found in 3.1.x
+* Vendor padrino-* to avoid dep hell
+* `middleman-more` gem returns, but it's empty for backwards compat
+* Prefer internal files.exists? over ruby's slow File.exists?
+
+3.1.0.rc.1
+===
+
+* Move more into core, autoloaded if gems are available.
+* DataStore may now be accessed like a hash with #[] and #has_key?. #880
+* The i18n extension now supports providing localized templates as separate files, like index.es.html.haml. #816, #823
+* The list of regular expressions for which files are ignored by the file watcher are now configurable.
+* Revert to Thor 0.15.x
+* Revert to padrino-helpers 0.10.x (dependency hell)
+* Drop i18n dep to match activesupport at 0.6.1
+
+3.1.0.beta.2
+===
+
+* Extension template uses new class-based Extension
+* Fix missing children in some sitemap traversal operations. #837
+* Add respond_to? to DataStore. #872
+* Allow discovery of prerelease gems.  #873
+* Include middleman-livereload in default Gemfile
+* Update Rack dependency to 1.5.x
+* Update to Listen 1.0.x
+* Update to padrino-helpers 0.11.x
+* Update uglifier to 2.0.x
+* Convert all of middleman-more to new class-based Extensions
+
+3.1.0.beta.1
 ===
 
 * Support Slim 2.0 ::Slim::Embedded
@@ -7,9 +57,6 @@ master
 * Allow frontmatter "renderer_options" key to overwrite renderer options on a per-file basis. #859
 * A custom :partials_dir may be configured, and partials will be looked up from it. #854
 * The sprockets environment is now available before config.rb is run, so you can mess with it.
-* :js_assets_paths configuration is deprecated in favor of just calling sprockets.append_path. middleman/sprockets#22
-* Sprockets integration, especially with regard to helper methods, is significantly improved. middleman/sprockets#22
-* Images and fonts from gems added to the Sprockets load path will now be copied to the build output. middleman/sprockets#22 
 * Added a "t" helper that delegates to I18n.t, just like Rails. #853.
 * I18n will fall back to the default locale if a translation in the current locale is not found. You can disable this behavior by passing `:no_fallbacks => true` when activating `:i18n`. More settings documented at https://github.com/svenfuchs/i18n/wiki/Fallbacks . #853
 * Switched default Markdown engine to Kramdown. #852

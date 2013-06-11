@@ -37,6 +37,8 @@ module Middleman
       class << self
         # @private
         def registered(app)
+          app.define_hook :initialized
+          app.define_hook :instance_available
           app.define_hook :after_configuration
           app.define_hook :before_configuration
           app.define_hook :build_config
@@ -68,7 +70,9 @@ module Middleman
         # @param [Hash] options Per-extension options hash
         # @return [void]
         def register(extension, options={}, &block)
-          if extension.instance_of? Module
+          if extension.instance_of?(Class) && extension.ancestors.include?(::Middleman::Extension)
+            extension.new(self, options, &block)
+          else
             extend extension
             if extension.respond_to?(:registered)
               if extension.method(:registered).arity === 1
@@ -78,8 +82,6 @@ module Middleman
               end
             end
             extension
-          elsif extension.instance_of?(Class) && extension.ancestors.include?(::Middleman::Extension)
-            extension.new(self, options, &block)
           end
         end
       end
@@ -105,7 +107,22 @@ module Middleman
             logger.error "== Unknown Extension: #{ext}"
           else
             logger.debug "== Activating: #{ext}"
-            extensions[ext] = self.class.register(ext_module, options, &block)
+
+            if ext_module.instance_of? Module
+              extensions[ext] = self.class.register(ext_module, options, &block)
+            elsif ext_module.instance_of?(Class) && ext_module.ancestors.include?(::Middleman::Extension)
+              if ext_module.supports_multiple_instances?
+                extensions[ext] ||= {}
+                key = "instance_#{extensions[ext].keys.length}"
+                extensions[ext][key] = ext_module.new(self.class, options, &block)
+              else
+                if extensions[ext]
+                  logger.error "== #{ext} already activated."
+                else
+                  extensions[ext] = ext_module.new(self.class, options, &block)
+                end
+              end
+            end
           end
         end
 
@@ -121,10 +138,12 @@ module Middleman
           super
 
           self.class.inst = self
-          run_hook :before_configuration
 
           # Search the root of the project for required files
           $LOAD_PATH.unshift(root)
+
+          ::Middleman::Extension.clear_after_extension_callbacks
+          run_hook :initialized
 
           if config[:autoload_sprockets]
             begin
@@ -133,6 +152,8 @@ module Middleman
             rescue LoadError
             end
           end
+
+          run_hook :before_configuration
 
           # Check for and evaluate local configuration
           local_config = File.join(root, "config.rb")
@@ -144,11 +165,32 @@ module Middleman
           run_hook :build_config if build?
           run_hook :development_config if development?
 
+          run_hook :instance_available
+
+          # This is for making the tests work - since the tests
+          # don't completely reload middleman, I18n.load_path can get
+          # polluted with paths from other test app directories that don't
+          # exist anymore.
+          if ENV["TEST"]
+            ::I18n.load_path.delete_if {|path| path =~ %r{tmp/aruba}}
+            ::I18n.reload!
+          end
+
           run_hook :after_configuration
 
           logger.debug "Loaded extensions:"
-          self.extensions.each do |ext,_|
-            logger.debug "== Extension: #{ext}"
+          self.extensions.each do |ext, klass|
+            if ext.is_a?(Hash)
+              ext.each do |k,_|
+                logger.debug "== Extension: #{k}"
+              end
+            else
+              logger.debug "== Extension: #{ext}"
+            end
+
+            if klass.is_a?(::Middleman::Extension)
+              ::Middleman::Extension.activated_extension(klass)
+            end
           end
         end
       end

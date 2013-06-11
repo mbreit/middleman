@@ -1,4 +1,5 @@
 # -*- encoding: utf-8 -*-
+$:.push File.expand_path("../lib", __FILE__)
 require File.expand_path("../../middleman-core/lib/middleman-core/version.rb", __FILE__)
 
 Gem::Specification.new do |s|
@@ -15,15 +16,4 @@ Gem::Specification.new do |s|
   s.files         = `git ls-files -z`.split("\0")
   s.test_files    = `git ls-files -z -- {fixtures,features}/*`.split("\0")
   s.require_paths = ["lib"]
-
-  s.add_dependency("middleman-core", Middleman::VERSION)
-  s.add_dependency("uglifier", ["~> 1.3.0"])
-  s.add_dependency("haml", [">= 3.1.6"])
-  s.add_dependency("sass", [">= 3.1.20"])
-  s.add_dependency("compass", [">= 0.12.2"])
-  s.add_dependency("coffee-script", ["~> 2.2.0"])
-  s.add_dependency("execjs", ["~> 1.4.0"])
-  s.add_dependency("kramdown", ["~> 1.0.0"])
-  s.add_dependency("i18n", ["~> 0.6.4"])
-  s.add_dependency("padrino-helpers", ["0.10.7"])
 end

@@ -1,18 +1,21 @@
 # Using Tilt for templating
 require "tilt"
 
+# i18n Built-in
+require "i18n"
+
 # Use ActiveSupport JSON
 require "active_support/json"
 require "active_support/core_ext/integer/inflections"
 require "active_support/core_ext/float/rounding"
 
 # Simple callback library
-require "middleman-core/vendor/hooks-0.2.0/lib/hooks"
+require "vendored-middleman-deps/hooks-0.2.0/lib/hooks"
 
 require "middleman-core/sitemap"
 
-require "middleman-core/core_extensions"
 require "middleman-core/configuration"
+require "middleman-core/core_extensions"
 
 # Core Middleman Class
 module Middleman
@@ -94,6 +97,10 @@ module Middleman
     # @return [String]
     config.define_setting :partials_dir,   "", 'Location of partials within source'
 
+    # Location of layouts within source. Used by renderers.
+    # @return [String]
+    config.define_setting :layouts_dir, "layouts", 'Location of layouts within source'
+
     # Where to build output files
     # @return [String]
     config.define_setting :build_dir,   "build", 'Where to build output files'
@@ -167,7 +174,7 @@ module Middleman
     # @private
     # @return [Middleman::Util::Cache] The cache
     def self.cache
-      @_cache ||= ::Middleman::Util::Cache.new
+      @_cache ||= ::Tilt::Cache.new
     end
     delegate :cache, :to => :"self.class"
 
@@ -220,3 +227,13 @@ module Middleman
 
   end
 end
+
+Middleman::CoreExtensions::DefaultHelpers.activate
+
+Middleman::CoreExtensions::Internationalization.register(:i18n)
+
+if defined?(Middleman::CoreExtensions::Compass)
+  Middleman::CoreExtensions::Compass.activate
+end
+
+Middleman::Extensions::Lorem.activate

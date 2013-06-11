@@ -7,7 +7,7 @@ require File.expand_path("../middleman-core/lib/middleman-core/version.rb", __FI
 ROOT = File.expand_path(File.dirname(__FILE__))
 GEM_NAME = 'middleman'
 
-middleman_gems = %w(middleman-core middleman-more middleman)
+middleman_gems = %w(middleman-more middleman-core middleman)
 GEM_PATHS = middleman_gems.freeze
 
 def sh_rake(command)
@@ -76,30 +76,36 @@ end
 desc "Generate documentation for all middleman gems"
 task :doc do
   GEM_PATHS.each do |g|
-    sh "cd #{File.join(ROOT, g)} && #{Gem.ruby} -S rake yard"
+    Dir.chdir("#{File.join(ROOT, g)}") { sh "#{Gem.ruby} -S rake yard" }
   end
 end
 
 desc "Run tests for all middleman gems"
 task :test do
   GEM_PATHS.each do |g|
-    sh "cd #{File.join(ROOT, g)} && #{Gem.ruby} -S rake test"
+    Dir.chdir("#{File.join(ROOT, g)}") { sh "#{Gem.ruby} -S rake test" }
   end
 end
 
 desc "Run specs for all middleman gems"
 task :spec do
   GEM_PATHS.each do |g|
-    sh "cd #{File.join(ROOT, g)} && #{Gem.ruby} -S rake spec"
+    Dir.chdir("#{File.join(ROOT, g)}") { sh "#{Gem.ruby} -S rake spec" }
   end
 end
 
-# desc "Rune cane for all middleman gems"
-# task :cane do
-#   GEM_PATHS.each do |g|
-#     sh "cd #{File.join(ROOT, g)} && #{Gem.ruby} -S cane"
-#   end
-# end
+begin
+  require 'cane/rake_task'
+
+  desc "Run cane to check quality metrics"
+  Cane::RakeTask.new(:quality) do |cane|
+    cane.no_style = true
+    cane.no_doc = true
+    cane.abc_glob = "middleman*/lib/middleman*/**/*.rb"
+  end
+rescue LoadError
+  # warn "cane not available, quality task not provided."
+end
 
 desc "Run tests for all middleman gems"
 task :default => :test

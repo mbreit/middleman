@@ -63,14 +63,17 @@ module Middleman::Cli
 
       action GlobAction.new(self, opts)
 
+      self.class.shared_instance.run_hook :after_build, self
+
       if @had_errors && !@debugging
-        cmd = "middleman build --verbose"
-        self.shell.say "There were errors during this build, re-run with `#{cmd}` to see the full exception."
+        msg = "There were errors during this build"
+        unless options["verbose"]
+          msg << ", re-run with `middleman build --verbose` to see the full exception."
+        end
+        self.shell.say msg, :red
       end
 
       exit(1) if @had_errors
-
-      self.class.shared_instance.run_hook :after_build, self
     end
 
     # Static methods
@@ -155,7 +158,7 @@ module Middleman::Cli
           raise e
           exit(1)
         elsif options["verbose"]
-          self.shell.error(response)
+          self.shell.say response, :red
         end
       end
 
@@ -202,17 +205,14 @@ module Middleman::Cli
     # Remove files which were not built in this cycle
     # @return [void]
     def clean!
-      files       = @cleaning_queue.select { |q| q.file? }
-      directories = @cleaning_queue.select { |q| q.directory? }
-
-      files.each do |f|
+      @cleaning_queue.select { |q| q.file? }.each do |f|
         base.remove_file f, :force => true
       end
 
-      directories = directories.sort_by {|d| d.to_s.length }.reverse!
-
-      directories.each do |d|
-        base.remove_file d, :force => true if directory_empty? d
+      Dir[File.join(@destination, "**", "*")].select { |d|
+        File.directory?(d)
+      }.each do |d|
+        base.remove_file d, :force => true if directory_empty? Pathname(d)
       end
     end
 

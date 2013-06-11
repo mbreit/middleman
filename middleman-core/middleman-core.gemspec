@@ -19,20 +19,21 @@ Gem::Specification.new do |s|
   
   # Core
   s.add_dependency("bundler", ["~> 1.1"])
-  s.add_dependency("rack", ["~> 1.4.1"])
+  s.add_dependency("rack", [">= 1.4.5"])
   s.add_dependency("tilt", ["~> 1.3.6"])
   
   # Builder
   s.add_dependency("rack-test", ["~> 0.6.1"])
   
   # CLI
-  s.add_dependency("thor", ["~> 0.15.4"])
+  s.add_dependency("thor", [">= 0.15.2", "< 2.0"])
   
   # Helpers
   s.add_dependency("activesupport", ["~> 3.2.6"])
   
   # Watcher
-  s.add_dependency("listen", ["~> 0.7.3"])
-  # s.add_dependency("rb-fsevent", ["~> 0.9.3"]) # OS X
-  # s.add_dependency("rb-inotify", ["~> 0.9.0"]) # Linux
+  s.add_dependency("listen", ["~> 1.1.6"])
+
+  # i18n
+  s.add_dependency("i18n", ["~> 0.6.1"])
 end

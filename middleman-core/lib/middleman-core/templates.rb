@@ -34,6 +34,12 @@ module Middleman::Templates
       source_paths << File.join(File.dirname(__FILE__), 'templates')
     end
 
+    # The gemfile template to use. Individual templates can define this class
+    # method to override the template path.
+    def self.gemfile_template
+      "shared/Gemfile.tt"
+    end
+
     # Required path for the new project to be generated
     argument :location, :type => :string
 
@@ -57,7 +63,7 @@ module Middleman::Templates
     # @return [void]
     def generate_bundler!
       return if options[:'skip-gemfile']
-      template "shared/Gemfile.tt", File.join(location, "Gemfile")
+      template self.class.gemfile_template, File.join(location, "Gemfile")
 
       return if options[:'skip-bundle']
       inside(location) do
@@ -86,5 +92,11 @@ require "middleman-core/templates/html5"
 # HTML5 Mobile template
 require "middleman-core/templates/mobile"
 
+# SMACSS templates
+require "middleman-more/templates/smacss"
+
 # Local templates
 require "middleman-core/templates/local"
+
+# Barebones template
+require "middleman-core/templates/empty"

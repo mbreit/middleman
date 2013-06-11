@@ -1,3 +1,4 @@
+/.bundle
 .DS_Store
 coverage
 rdoc
@@ -8,6 +9,7 @@ pkg
 Gemfile.lock
 docs
 .rbenv-*
+.ruby-version
 .*.swp
 build
 doc
@@ -16,3 +18,4 @@ tmp
 Makefile
 .mm-pid-*
 .idea
+*.sublime-workspace

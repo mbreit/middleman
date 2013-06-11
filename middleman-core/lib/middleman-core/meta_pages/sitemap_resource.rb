@@ -1,3 +1,8 @@
+if !defined?(::Padrino::Helpers)
+  require 'vendored-middleman-deps/padrino-core-0.11.2/lib/padrino-core/support_lite'
+  require 'vendored-middleman-deps/padrino-helpers-0.11.2/lib/padrino-helpers'
+end
+
 module Middleman
   module MetaPages
     # View class for a sitemap resource
@@ -32,7 +37,7 @@ module Middleman
           'Path' => @resource.path,
           'Build Path' => @resource.destination_path,
           'URL' => content_tag(:a, @resource.url, :href => @resource.url),
-          'Template' => @resource.source_file,
+          'Source File' => @resource.source_file,
         }
 
         data = @resource.data

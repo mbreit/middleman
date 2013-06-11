@@ -25,6 +25,8 @@ module Middleman
           ::Tilt.mappings.delete('html') # WTF, Tilt?
           ::Tilt.mappings.delete('csv')
 
+          require 'active_support/core_ext/string/output_safety'
+
           # Activate custom renderers
           require "middleman-core/renderers/erb"
           app.register Middleman::Renderers::ERb
@@ -127,9 +129,10 @@ module Middleman
 
           # Store last engine for later (could be inside nested renders)
           @current_engine, engine_was = engine, @current_engine
-          old_locale = ::I18n.locale
-
-          I18n.locale = opts[:lang] if opts[:lang]
+          if defined?(::I18n)
+            old_locale = ::I18n.locale
+            ::I18n.locale = opts[:lang] if opts[:lang]
+          end
 
           # Use a dup of self as a context so that instance variables set within
           # the template don't persist for other templates.
@@ -150,7 +153,7 @@ module Middleman
               content = render_individual_file(path, locs, opts, context)
               path = File.basename(path, File.extname(path))
             rescue LocalJumpError
-              raise "Tried to render a layout (calls yield) at #{path} like it was a template. Non-default layouts need to be in #{source}/layouts."
+              raise "Tried to render a layout (calls yield) at #{path} like it was a template. Non-default layouts need to be in #{source}/#{layout_dir}."
             end
           end
 
@@ -167,7 +170,7 @@ module Middleman
         ensure
           # Pop all the saved variables from earlier as we may be returning to a
           # previous render (layouts, partials, nested layouts).
-          ::I18n.locale = old_locale
+          ::I18n.locale = old_locale if defined?(::I18n)
           @current_engine = engine_was
           @content_blocks = nil
           @current_locs = nil
@@ -274,7 +277,9 @@ module Middleman
             content = callback.call(content, path, locs, template_class)
           end
 
-          return content
+          output = ::ActiveSupport::SafeBuffer.new
+          output.safe_concat content
+          output
         ensure
           # Reset stored buffer
           @_out_buf = _buf_was
@@ -364,7 +369,7 @@ module Middleman
 
             # Check layouts folder
             if !layout_path
-              layout_path, layout_engine = resolve_template(File.join("layouts", name.to_s), :preferred_engine => preferred_engine)
+              layout_path, layout_engine = resolve_template(File.join(config[:layouts_dir], name.to_s), :preferred_engine => preferred_engine)
             end
           end
 
@@ -375,7 +380,7 @@ module Middleman
 
           # Check layouts folder, no preference
           if !layout_path
-            layout_path, layout_engine = resolve_template(File.join("layouts", name.to_s))
+            layout_path, layout_engine = resolve_template(File.join(config[:layouts_dir], name.to_s))
           end
 
           # Return the path
@@ -408,7 +413,7 @@ module Middleman
             @_out_buf = _buf_was
           end
 
-          concat_content render_individual_file(layout_path, @current_locs || {}, @current_opts || {}, self) { content }
+          concat_safe_content render_individual_file(layout_path, @current_locs || {}, @current_opts || {}, self) { content }
         ensure
           @current_engine = engine_was
         end
@@ -470,7 +475,7 @@ module Middleman
             end
 
             # If we found one, return it and the found engine
-            if found_path || (File.exists?(on_disk_path) && !File.directory?(on_disk_path))
+            if found_path || files.exists?(on_disk_path)
               engine = found_path ? File.extname(found_path)[1..-1].to_sym : nil
               [ found_path || on_disk_path, engine ]
             else

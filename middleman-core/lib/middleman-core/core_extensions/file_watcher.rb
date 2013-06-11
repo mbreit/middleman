@@ -8,6 +8,7 @@ module Middleman
 
       IGNORE_LIST = [
         /^\.bundle\//,
+        /^vendor\//,
         /^\.sass-cache\//,
         /^\.git\//,
         /^\.gitignore$/,
@@ -17,7 +18,8 @@ module Middleman
         /^Gemfile$/,
         /^Gemfile\.lock$/,
         /~$/,
-        /(^|\/)\.?#/
+        /(^|\/)\.?#/,
+        /^tmp\//
       ]
 
       # Setup extension
@@ -26,6 +28,8 @@ module Middleman
         # Once registered
         def registered(app)
           app.send :include, InstanceMethods
+
+          app.config.define_setting :file_watcher_ignore, IGNORE_LIST, 'Regexes for paths that should be ignored when they change.'
 
           # Before parsing config, load the data/ directory
           app.before_configuration do
@@ -54,6 +58,7 @@ module Middleman
       class API
 
         attr_reader :app
+        attr_reader :known_paths
         delegate :logger, :to => :app
 
         # Initialize api and internal path cache
@@ -140,13 +145,19 @@ module Middleman
           reload_path(path, true)
         end
 
+        def exists?(path)
+          p = Pathname(path)
+          p = p.relative_path_from(Pathname(@app.root)) if !p.relative?
+          @known_paths.include?(p)
+        end
+
       protected
         # Whether this path is ignored
         # @param [Pathname] path
         # @return [Boolean]
         def ignored?(path)
           path = path.to_s
-          IGNORE_LIST.any? { |r| path =~ r }
+          app.config[:file_watcher_ignore].any? { |r| path =~ r }
         end
 
         # Notify callbacks for a file given an array of callbacks
